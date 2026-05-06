@@ -1,6 +1,9 @@
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 export const playSound = (type) => {
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
   const oscillator = audioCtx.createOscillator();
   const gainNode = audioCtx.createGain();
 
