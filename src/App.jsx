@@ -623,6 +623,83 @@ const WordPuzzleGame = ({ onBack, onScore }) => {
   );
 };
 
+// Reaction Speed Game
+const ReactionGame = ({ onBack, onScore }) => {
+  const [state, setState] = useState('waiting'); // waiting, ready, result
+  const [startTime, setStartTime] = useState(0);
+  const [result, setResult] = useState(0);
+  const timerRef = React.useRef(null);
+
+  const startTest = () => {
+    setState('waiting');
+    playSound('click');
+    const delay = Math.floor(Math.random() * 3000) + 2000;
+    timerRef.current = setTimeout(() => {
+      setState('ready');
+      setStartTime(performance.now());
+    }, delay);
+  };
+
+  const handleClick = () => {
+    if (state === 'waiting') {
+      clearTimeout(timerRef.current);
+      alert("Too early! Wait for the Green!");
+      setState('waiting');
+      return;
+    }
+    if (state === 'ready') {
+      const time = Math.floor(performance.now() - startTime);
+      setResult(time);
+      setState('result');
+      playSound('success');
+      if (time < 500) {
+        onScore(30);
+        confetti();
+      }
+    }
+  };
+
+  return (
+    <div 
+      className="container fade-in" 
+      onClick={state === 'ready' || state === 'waiting' ? handleClick : null}
+      style={{ 
+        textAlign: 'center', padding: '50px', minHeight: '100vh',
+        backgroundColor: state === 'ready' ? '#6BCB77' : state === 'waiting' ? '#FF6B6B' : 'transparent',
+        transition: 'background-color 0.1s'
+      }}
+    >
+      <button className="btn-primary" onClick={onBack} style={{ position: 'absolute', top: '20px', left: '20px' }}><ArrowLeft size={20} /></button>
+      
+      {state === 'waiting' && (
+        <div style={{ marginTop: '100px', color: 'white' }}>
+          <h2 style={{ fontSize: '4rem' }}>Wait for Green...</h2>
+          <p style={{ fontSize: '1.5rem' }}>Don't click yet!</p>
+        </div>
+      )}
+
+      {state === 'ready' && (
+        <div style={{ marginTop: '100px', color: 'white' }}>
+          <h2 style={{ fontSize: '5rem' }}>CLICK NOW!!! ⚡️</h2>
+        </div>
+      )}
+
+      {state === 'result' && (
+        <div className="game-card" style={{ maxWidth: '500px', margin: '100px auto', padding: '40px' }}>
+          <h2 style={{ fontSize: '2.5rem', marginBottom: '20px' }}>Your Time:</h2>
+          <div style={{ fontSize: '5rem', fontWeight: 'bold', color: '#4D96FF', marginBottom: '30px' }}>{result}ms</div>
+          <p style={{ fontSize: '1.5rem', marginBottom: '40px' }}>
+            {result < 300 ? "🚀 LIGHTNING FAST!" : result < 500 ? "🏃 SUPER QUICK!" : "🐢 TURTLE SPEED"}
+          </p>
+          <button className="btn-primary" onClick={startTest}>Try Again</button>
+        </div>
+      )}
+
+      {state === 'waiting' && !timerRef.current && startTest()}
+    </div>
+  );
+};
+
 function App() {
   const [activeGame, setActiveGame] = useState(null);
   const [totalScore, setTotalScore] = useState(() => parseInt(localStorage.getItem('kidsGameTotalScore') || '0'));
@@ -650,7 +727,7 @@ function App() {
       case 'dragdrop': return <GameStub title="Drag & Drop" onBack={() => setActiveGame(null)} />;
       case 'spotdifference': return <GameStub title="Spot Difference" onBack={() => setActiveGame(null)} />;
       case 'drawing': return <DrawingGame onBack={() => setActiveGame(null)} />;
-      case 'reaction': return <GameStub title="Reaction Speed" onBack={() => setActiveGame(null)} />;
+      case 'reaction': return <ReactionGame {...props} />;
       default: return (
         <div className="App">
           <div style={{ position: 'absolute', top: '20px', right: '20px' }}>
