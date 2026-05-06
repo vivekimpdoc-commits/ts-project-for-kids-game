@@ -7,6 +7,7 @@ export default defineConfig({
   preview: {
     port: 4173,
     host: '0.0.0.0',
+    allowedHosts: ['ts-project-for-kids-game.onrender.com', '.onrender.com']
   },
   server: {
     port: 5173,
