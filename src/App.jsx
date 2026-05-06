@@ -536,45 +536,88 @@ const QuizGame = ({ onBack, onScore }) => {
   );
 };
 
-// Word Puzzle Game
+// Word Puzzle Game (Enhanced)
 const WordPuzzleGame = ({ onBack, onScore }) => {
   const puzzles = [
-    { word: 'APPLE', scramble: 'PELPA' },
-    { word: 'LION', scramble: 'NOLI' },
-    { word: 'SUN', scramble: 'NUS' },
-    { word: 'HAPPY', scramble: 'PYPHA' }
+    { word: 'APPLE', hint: '🍎 A sweet red fruit' },
+    { word: 'LION', hint: '🦁 King of the jungle' },
+    { word: 'BANANA', hint: '🍌 A long yellow fruit' },
+    { word: 'TURTLE', hint: '🐢 I move very slowly' },
+    { word: 'GIRAFFE', hint: '🦒 I have a long neck' },
+    { word: 'ICE', hint: '🧊 I am very cold' }
   ];
   const [idx, setIdx] = useState(0);
-  const [guess, setGuess] = useState('');
+  const [guess, setGuess] = useState([]);
+  const [shuffled, setShuffled] = useState([]);
 
-  const handleLetter = (l) => {
-    const nextGuess = guess + l;
-    setGuess(nextGuess);
-    if (nextGuess === puzzles[idx].word) {
+  useEffect(() => {
+    const word = puzzles[idx].word;
+    setShuffled(word.split('').sort(() => Math.random() - 0.5));
+    setGuess([]);
+  }, [idx]);
+
+  const handleLetter = (char, sIdx) => {
+    playSound('click');
+    const newGuess = [...guess, { char, sIdx }];
+    setGuess(newGuess);
+    
+    if (newGuess.map(g => g.char).join('') === puzzles[idx].word) {
       playSound('success');
       confetti();
-      onScore(40);
-      setGuess('');
-      setIdx((idx + 1) % puzzles.length);
-    } else if (nextGuess.length >= puzzles[idx].word.length) {
+      onScore(50);
+      setTimeout(() => setIdx((idx + 1) % puzzles.length), 1000);
+    } else if (newGuess.length >= puzzles[idx].word.length) {
       playSound('error');
-      setGuess('');
+      setTimeout(() => setGuess([]), 500);
     }
   };
 
   return (
     <div className="container fade-in" style={{ textAlign: 'center', padding: '50px' }}>
       <button className="btn-primary" onClick={onBack} style={{ position: 'absolute', top: '20px', left: '20px' }}><ArrowLeft size={20} /></button>
-      <h2 style={{ fontSize: '2.5rem', marginBottom: '20px' }}>Unscramble the Word!</h2>
-      <div className="game-card" style={{ maxWidth: '500px', margin: '40px auto', padding: '40px' }}>
-        <div style={{ fontSize: '4rem', fontWeight: 'bold', color: '#FF6B6B', letterSpacing: '10px', marginBottom: '30px' }}>{puzzles[idx].scramble}</div>
-        <div style={{ fontSize: '2.5rem', minHeight: '60px', borderBottom: '4px solid #2D3436', marginBottom: '30px' }}>{guess}</div>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
-          {puzzles[idx].word.split('').sort().map((l, i) => (
-            <button key={i} className="btn-primary" onClick={() => handleLetter(l)}>{l}</button>
+      <h2 style={{ fontSize: '2.5rem', marginBottom: '10px' }}>Word Unscramble! 🧩</h2>
+      <p style={{ fontSize: '1.2rem', color: '#636e72', marginBottom: '30px' }}>{puzzles[idx].hint}</p>
+      
+      <div className="game-card" style={{ maxWidth: '700px', margin: '0 auto', padding: '40px' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', marginBottom: '40px', minHeight: '80px' }}>
+          {puzzles[idx].word.split('').map((_, i) => (
+            <div key={i} style={{ 
+              width: '60px', height: '70px', borderBottom: '5px solid #2D3436', 
+              fontSize: '3rem', fontWeight: 'bold', color: '#4D96FF' 
+            }}>
+              {guess[i]?.char || ''}
+            </div>
           ))}
         </div>
-        <button className="btn-primary" onClick={() => setGuess('')} style={{ marginTop: '20px', background: '#95a5a6' }}>Clear</button>
+
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '15px', flexWrap: 'wrap' }}>
+          {shuffled.map((char, i) => {
+            const isUsed = guess.some(g => g.sIdx === i);
+            return (
+              <button 
+                key={i} 
+                className="btn-primary"
+                disabled={isUsed}
+                onClick={() => handleLetter(char, i)}
+                style={{ 
+                  fontSize: '2rem', padding: '15px 25px',
+                  opacity: isUsed ? 0.3 : 1,
+                  transform: isUsed ? 'scale(0.8)' : 'scale(1)'
+                }}
+              >
+                {char}
+              </button>
+            );
+          })}
+        </div>
+
+        <button 
+          className="btn-primary" 
+          onClick={() => setGuess([])} 
+          style={{ marginTop: '40px', background: '#95a5a6', fontSize: '1rem' }}
+        >
+          Reset Word
+        </button>
       </div>
     </div>
   );
