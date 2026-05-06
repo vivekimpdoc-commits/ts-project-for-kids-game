@@ -332,6 +332,97 @@ const SpellingGame = ({ onBack, onScore }) => {
   );
 };
 
+// Drawing Fun Game
+const DrawingGame = ({ onBack }) => {
+  const canvasRef = React.useRef(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [color, setColor] = useState('#FF6B6B');
+  const [brushSize, setBrushSize] = useState(10);
+
+  const startDrawing = (e) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX || e.touches[0].clientX) - rect.left;
+    const y = (e.clientY || e.touches[0].clientY) - rect.top;
+
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = color;
+    ctx.lineWidth = brushSize;
+    setIsDrawing(true);
+  };
+
+  const draw = (e) => {
+    if (!isDrawing) return;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX || e.touches[0].clientX) - rect.left;
+    const y = (e.clientY || e.touches[0].clientY) - rect.top;
+
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+  };
+
+  const clear = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    playSound('click');
+  };
+
+  return (
+    <div className="container fade-in" style={{ textAlign: 'center', padding: '20px' }}>
+      <button className="btn-primary" onClick={onBack} style={{ position: 'absolute', top: '20px', left: '20px' }}><ArrowLeft size={20} /></button>
+      <h2 style={{ fontSize: '2.5rem', marginBottom: '20px' }}>Drawing Fun! 🎨</h2>
+      
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '20px' }}>
+        {['#FF6B6B', '#4D96FF', '#6BCB77', '#FFD93D', '#9254C8', '#2D3436'].map(c => (
+          <div 
+            key={c} 
+            onClick={() => setColor(c)}
+            style={{ 
+              width: '40px', height: '40px', backgroundColor: c, borderRadius: '50%', 
+              cursor: 'pointer', border: color === c ? '4px solid white' : '2px solid #2D3436',
+              boxShadow: '0 4px 0 rgba(0,0,0,0.1)'
+            }} 
+          />
+        ))}
+        <input 
+          type="range" min="5" max="30" value={brushSize} 
+          onChange={(e) => setBrushSize(e.target.value)}
+          style={{ width: '100px' }}
+        />
+        <button className="btn-primary" onClick={clear} style={{ padding: '5px 15px', fontSize: '1rem' }}>Clear</button>
+      </div>
+
+      <canvas
+        ref={canvasRef}
+        width={800}
+        height={500}
+        onMouseDown={startDrawing}
+        onMouseMove={draw}
+        onMouseUp={stopDrawing}
+        onMouseOut={stopDrawing}
+        onTouchStart={startDrawing}
+        onTouchMove={draw}
+        onTouchEnd={stopDrawing}
+        style={{ 
+          background: 'white', border: '5px solid #2D3436', borderRadius: '30px', 
+          maxWidth: '100%', height: 'auto', cursor: 'crosshair', boxShadow: '0 10px 0 rgba(0,0,0,0.1)' 
+        }}
+      />
+    </div>
+  );
+};
+
 function App() {
   const [activeGame, setActiveGame] = useState(null);
   const [totalScore, setTotalScore] = useState(() => parseInt(localStorage.getItem('kidsGameTotalScore') || '0'));
@@ -358,7 +449,7 @@ function App() {
       case 'gkquiz': return <GameStub title="General Quiz" onBack={() => setActiveGame(null)} />;
       case 'dragdrop': return <GameStub title="Drag & Drop" onBack={() => setActiveGame(null)} />;
       case 'spotdifference': return <GameStub title="Spot Difference" onBack={() => setActiveGame(null)} />;
-      case 'drawing': return <GameStub title="Drawing Fun" onBack={() => setActiveGame(null)} />;
+      case 'drawing': return <DrawingGame onBack={() => setActiveGame(null)} />;
       case 'reaction': return <GameStub title="Reaction Speed" onBack={() => setActiveGame(null)} />;
       default: return (
         <div className="App">
