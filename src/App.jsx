@@ -423,6 +423,163 @@ const DrawingGame = ({ onBack }) => {
   );
 };
 
+// Animal Learning Game
+const AnimalGame = ({ onBack }) => {
+  const animals = [
+    { name: 'Lion', emoji: '🦁', sound: 'Roar!' },
+    { name: 'Elephant', emoji: '🐘', sound: 'Trumpet!' },
+    { name: 'Monkey', emoji: '🐒', sound: 'Ooh ooh aah aah!' },
+    { name: 'Panda', emoji: '🐼', sound: 'Sneeze!' },
+    { name: 'Giraffe', emoji: '🦒', sound: 'I am tall!' }
+  ];
+  const [idx, setIdx] = useState(0);
+
+  const speak = () => {
+    const u = new SpeechSynthesisUtterance(`${animals[idx].name}. ${animals[idx].sound}`);
+    window.speechSynthesis.speak(u);
+  };
+
+  return (
+    <div className="container fade-in" style={{ textAlign: 'center', padding: '50px' }}>
+      <button className="btn-primary" onClick={onBack} style={{ position: 'absolute', top: '20px', left: '20px' }}><ArrowLeft size={20} /></button>
+      <div className="game-card" style={{ maxWidth: '400px', margin: '40px auto', padding: '60px' }}>
+        <div style={{ fontSize: '10rem' }}>{animals[idx].emoji}</div>
+        <h2 style={{ fontSize: '3rem', margin: '20px 0' }}>{animals[idx].name}</h2>
+        <button className="btn-primary" onClick={speak}><Speaker size={24} /> Listen</button>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '20px' }}>
+        <button className="btn-primary" onClick={() => setIdx((idx - 1 + animals.length) % animals.length)}>Prev</button>
+        <button className="btn-primary" onClick={() => setIdx((idx + 1) % animals.length)}>Next</button>
+      </div>
+    </div>
+  );
+};
+
+// Fruits & Veggies Game
+const FruitsGame = ({ onBack, onScore }) => {
+  const items = [
+    { name: 'Apple', emoji: '🍎' }, { name: 'Banana', emoji: '🍌' }, { name: 'Carrot', emoji: '🥕' },
+    { name: 'Grapes', emoji: '🍇' }, { name: 'Broccoli', emoji: '🥦' }, { name: 'Strawberry', emoji: '🍓' }
+  ];
+  const [target, setTarget] = useState(items[0]);
+  const [options, setOptions] = useState([]);
+
+  const generateRound = () => {
+    const t = items[Math.floor(Math.random() * items.length)];
+    setTarget(t);
+    setOptions([...items].sort(() => Math.random() - 0.5));
+  };
+
+  useEffect(() => generateRound(), []);
+
+  const handlePick = (item) => {
+    if (item.name === target.name) {
+      playSound('success');
+      confetti();
+      onScore(15);
+      generateRound();
+    } else {
+      playSound('error');
+    }
+  };
+
+  return (
+    <div className="container fade-in" style={{ textAlign: 'center', padding: '50px' }}>
+      <button className="btn-primary" onClick={onBack} style={{ position: 'absolute', top: '20px', left: '20px' }}><ArrowLeft size={20} /></button>
+      <h2 style={{ fontSize: '2.5rem', marginBottom: '30px' }}>Where is the {target.name}?</h2>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', maxWidth: '600px', margin: '0 auto' }}>
+        {options.map((item, i) => (
+          <div key={i} className="game-card" onClick={() => handlePick(item)} style={{ cursor: 'pointer', fontSize: '4rem' }}>{item.emoji}</div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// General Quiz Game
+const QuizGame = ({ onBack, onScore }) => {
+  const questions = [
+    { q: 'Which animal gives us milk?', a: 'Cow', opts: ['Cow', 'Lion', 'Dog'] },
+    { q: 'What is the color of the sky?', a: 'Blue', opts: ['Red', 'Blue', 'Green'] },
+    { q: 'How many legs does a spider have?', a: '8', opts: ['4', '6', '8'] },
+    { q: 'Which planet is known as the Red Planet?', a: 'Mars', opts: ['Mars', 'Earth', 'Venus'] }
+  ];
+  const [idx, setIdx] = useState(0);
+
+  const handleAnswer = (opt) => {
+    if (opt === questions[idx].a) {
+      playSound('success');
+      confetti();
+      onScore(25);
+      if (idx < questions.length - 1) setIdx(idx + 1);
+      else {
+        alert("Wow! You finished the quiz!");
+        onBack();
+      }
+    } else {
+      playSound('error');
+    }
+  };
+
+  return (
+    <div className="container fade-in" style={{ textAlign: 'center', padding: '50px' }}>
+      <button className="btn-primary" onClick={onBack} style={{ position: 'absolute', top: '20px', left: '20px' }}><ArrowLeft size={20} /></button>
+      <div className="game-card" style={{ maxWidth: '600px', margin: '40px auto', padding: '40px' }}>
+        <h2 style={{ fontSize: '2.5rem', marginBottom: '30px' }}>{questions[idx].q}</h2>
+        <div style={{ display: 'grid', gap: '15px' }}>
+          {questions[idx].opts.map(opt => (
+            <button key={opt} className="btn-primary" onClick={() => handleAnswer(opt)}>{opt}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Word Puzzle Game
+const WordPuzzleGame = ({ onBack, onScore }) => {
+  const puzzles = [
+    { word: 'APPLE', scramble: 'PELPA' },
+    { word: 'LION', scramble: 'NOLI' },
+    { word: 'SUN', scramble: 'NUS' },
+    { word: 'HAPPY', scramble: 'PYPHA' }
+  ];
+  const [idx, setIdx] = useState(0);
+  const [guess, setGuess] = useState('');
+
+  const handleLetter = (l) => {
+    const nextGuess = guess + l;
+    setGuess(nextGuess);
+    if (nextGuess === puzzles[idx].word) {
+      playSound('success');
+      confetti();
+      onScore(40);
+      setGuess('');
+      setIdx((idx + 1) % puzzles.length);
+    } else if (nextGuess.length >= puzzles[idx].word.length) {
+      playSound('error');
+      setGuess('');
+    }
+  };
+
+  return (
+    <div className="container fade-in" style={{ textAlign: 'center', padding: '50px' }}>
+      <button className="btn-primary" onClick={onBack} style={{ position: 'absolute', top: '20px', left: '20px' }}><ArrowLeft size={20} /></button>
+      <h2 style={{ fontSize: '2.5rem', marginBottom: '20px' }}>Unscramble the Word!</h2>
+      <div className="game-card" style={{ maxWidth: '500px', margin: '40px auto', padding: '40px' }}>
+        <div style={{ fontSize: '4rem', fontWeight: 'bold', color: '#FF6B6B', letterSpacing: '10px', marginBottom: '30px' }}>{puzzles[idx].scramble}</div>
+        <div style={{ fontSize: '2.5rem', minHeight: '60px', borderBottom: '4px solid #2D3436', marginBottom: '30px' }}>{guess}</div>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+          {puzzles[idx].word.split('').sort().map((l, i) => (
+            <button key={i} className="btn-primary" onClick={() => handleLetter(l)}>{l}</button>
+          ))}
+        </div>
+        <button className="btn-primary" onClick={() => setGuess('')} style={{ marginTop: '20px', background: '#95a5a6' }}>Clear</button>
+      </div>
+    </div>
+  );
+};
+
 function App() {
   const [activeGame, setActiveGame] = useState(null);
   const [totalScore, setTotalScore] = useState(() => parseInt(localStorage.getItem('kidsGameTotalScore') || '0'));
@@ -443,10 +600,10 @@ function App() {
       case 'numbers': return <NumberGame {...props} />;
       case 'shapes': return <ShapeGame {...props} />;
       case 'spelling': return <SpellingGame {...props} />;
-      case 'wordpuzzle': return <GameStub title="Word Puzzle" onBack={() => setActiveGame(null)} />;
-      case 'animals': return <GameStub title="Animal Learning" onBack={() => setActiveGame(null)} />;
-      case 'fruits': return <GameStub title="Fruits & Veggies" onBack={() => setActiveGame(null)} />;
-      case 'gkquiz': return <GameStub title="General Quiz" onBack={() => setActiveGame(null)} />;
+      case 'wordpuzzle': return <WordPuzzleGame {...props} />;
+      case 'animals': return <AnimalGame {...props} />;
+      case 'fruits': return <FruitsGame {...props} />;
+      case 'gkquiz': return <QuizGame {...props} />;
       case 'dragdrop': return <GameStub title="Drag & Drop" onBack={() => setActiveGame(null)} />;
       case 'spotdifference': return <GameStub title="Spot Difference" onBack={() => setActiveGame(null)} />;
       case 'drawing': return <DrawingGame onBack={() => setActiveGame(null)} />;
